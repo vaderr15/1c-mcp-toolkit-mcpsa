@@ -640,7 +640,6 @@ class SuperAssistantSseBridge:
                                 }
                             },
                             {
-                            {
                                 "name": "get_metadata",
                                 "description": "⚠️ ТОЛЬКО ОДИН ИНСТРУМЕНТ ЗА РАЗ! Получить метаданные базы 1С. Евлантий рекомендует: ВСЕГДА используйте этот инструмент перед execute_query если не знаете точные имена объектов/полей! / Get 1C database metadata",
                                 "inputSchema": {
