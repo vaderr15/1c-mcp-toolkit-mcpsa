@@ -55,14 +55,26 @@ CORS_ALLOW_ALL=true python -m onec_mcp_toolkit_proxy
 ### VPS развертывание (Ubuntu)
 
 ```bash
-# 1. Загрузить проект на сервер
-scp -r . user@your-vps:/opt/onec-mcp-toolkit/
+# 1. Подключиться к серверу и клонировать репозиторий
+ssh user@your-vps
+sudo su
+cd /opt
+git clone https://github.com/vaderr15/1c-mcp-toolkit-mcpsa.git onec-mcp-toolkit
+cd onec-mcp-toolkit
 
 # 2. Запустить автоматическую установку
+chmod +x install-vps.sh
 sudo ./install-vps.sh
 
 # 3. Проверить статус
 systemctl status onec-mcp-toolkit
+```
+
+**Обновление на VPS:**
+```bash
+cd /opt/onec-mcp-toolkit
+git pull
+docker-compose up -d --build
 ```
 
 **Подключение к VPS:**
@@ -76,7 +88,7 @@ systemctl status onec-mcp-toolkit
 docker-compose up -d
 
 # Проверить логи
-docker-compose logs -f
+docker logs onec-mcp -f
 
 # Остановить
 docker-compose down
@@ -150,11 +162,14 @@ docker-compose down
 ### Автоматическая установка на Ubuntu VPS
 
 ```bash
-# 1. Скопировать проект на сервер
-scp -r . root@your-vps:/opt/onec-mcp-toolkit/
+# 1. Подключиться к серверу и клонировать репозиторий
+ssh root@your-vps
+cd /opt
+git clone https://github.com/vaderr15/1c-mcp-toolkit-mcpsa.git onec-mcp-toolkit
+cd onec-mcp-toolkit
 
 # 2. Запустить установку
-cd /opt/onec-mcp-toolkit
+chmod +x install-vps.sh
 sudo ./install-vps.sh
 ```
 
@@ -175,7 +190,7 @@ systemctl status onec-mcp-toolkit
 systemctl restart onec-mcp-toolkit
 
 # Логи
-docker-compose logs -f
+docker logs onec-mcp -f
 
 # Остановка
 systemctl stop onec-mcp-toolkit
@@ -189,6 +204,10 @@ curl http://YOUR_VPS_IP:6003/health
 
 # Проверка подключения SuperAssistant
 curl http://YOUR_VPS_IP:6003/sse?channel=default
+
+# Логи (короткое имя контейнера!)
+docker logs onec-mcp
+docker logs -f onec-mcp
 ```
 
 ## 📋 Переменные окружения

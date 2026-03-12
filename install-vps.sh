@@ -25,11 +25,12 @@ add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(
 apt update
 apt install -y docker-ce docker-ce-cli containerd.io
 
-# Установка Docker Compose
-echo "🔧 Установка Docker Compose..."
-curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
-ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+# Установка Docker Compose Plugin (v2)
+echo "🔧 Установка Docker Compose Plugin..."
+apt install -y docker-compose-plugin
+
+# Проверка установки
+docker compose version
 
 # Создание директории проекта
 echo "📁 Создание директории проекта..."

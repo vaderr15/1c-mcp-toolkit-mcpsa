@@ -605,21 +605,21 @@ class SuperAssistantSseBridge:
                                     "properties": {
                                         "query": {
                                             "type": "string",
-                                            "description": "1C query language query"
+                                            "description": "Текст запроса на языке запросов 1С (например: 'ВЫБРАТЬ Код, Наименование ИЗ Справочник.Номенклатура ГДЕ Код = &КодТовара'). Используйте &ИмяПараметра для параметров."
                                         },
                                         "params": {
                                             "type": "object",
-                                            "description": "Query parameters"
+                                            "description": "Словарь параметров запроса (например, {\"Param1\": \"value1\"}). Значения могут быть: простые (строка, число, булево, дата) или ссылки на объекты в формате {\"_objectRef\": true, \"УникальныйИдентификатор\": \"uuid\", \"ТипОбъекта\": \"СправочникСсылка.Контрагенты\"}. Используйте &ИмяПараметра в запросе."
                                         },
                                         "limit": {
                                             "type": "integer",
-                                            "description": "Maximum number of rows to return",
+                                            "description": "Максимальное количество строк для возврата (по умолчанию: 100, максимум: 1000)",
                                             "default": 100
                                         },
                                         "include_schema": {
                                             "type": "boolean",
-                                            "description": "Include column type schema in response",
-                                            "default": False
+                                            "description": "Включить схему типов колонок в ответ (по умолчанию: false)",
+                                            "default": false
                                         }
                                     },
                                     "required": ["query"]
@@ -633,7 +633,7 @@ class SuperAssistantSseBridge:
                                     "properties": {
                                         "code": {
                                             "type": "string",
-                                            "description": "1C code to execute"
+                                            "description": "Код 1С для выполнения. Используйте 'Результат = ...' для возврата значения. НЕ объявляйте процедуры/функции, НЕ используйте 'Возврат'. Пример: 'Результат = ТекущаяДата();'"
                                         }
                                     },
                                     "required": ["code"]
@@ -647,11 +647,11 @@ class SuperAssistantSseBridge:
                                     "properties": {
                                         "filter": {
                                             "type": "string",
-                                            "description": "Полное имя объекта (например, Справочник.Номенклатура) или путь к элементу коллекции"
+                                            "description": "Полное имя объекта метаданных (например, 'Справочник.Номенклатура') или путь к элементу коллекции для получения детальной информации"
                                         },
                                         "meta_type": {
                                             "type": ["string", "array"],
-                                            "description": "Фильтр типа объекта для списка (строка или массив). Используйте '*' для списка по всем типам"
+                                            "description": "Фильтр типа объекта для списка (строка или массив). Доступные типы: 'Справочник', 'Документ', 'РегистрСведений', 'РегистрНакопления', 'РегистрБухгалтерии', 'РегистрРасчета', 'ПланВидовХарактеристик', 'ПланСчетов', 'ПланВидовРасчета', 'БизнесПроцесс', 'Задача'. Используйте '*' для всех типов."
                                         },
                                         "name_mask": {
                                             "type": "string",
@@ -665,7 +665,7 @@ class SuperAssistantSseBridge:
                                         "sections": {
                                             "type": "array",
                                             "items": {"type": "string"},
-                                            "description": "Разделы детализации для включения (работает только с filter). Поддерживаются: properties, forms, commands, layouts, predefined, movements, characteristics"
+                                            "description": "Разделы детализации для включения (работает только с filter). Доступные разделы: 'properties' (реквизиты), 'forms' (формы), 'commands' (команды), 'layouts' (макеты), 'predefined' (предопределенные), 'movements' (движения), 'characteristics' (характеристики)"
                                         },
                                         "offset": {
                                             "type": "integer",
@@ -674,7 +674,7 @@ class SuperAssistantSseBridge:
                                         },
                                         "extension_name": {
                                             "type": "string",
-                                            "description": "Имя расширения (None=основная конфигурация, ''=список расширений, 'Name'=объекты расширения)"
+                                            "description": "Имя расширения конфигурации. Значения: None или пустая строка = основная конфигурация, '' = список всех расширений, 'ИмяРасширения' = объекты конкретного расширения"
                                         }
                                     }
                                 }
@@ -687,21 +687,21 @@ class SuperAssistantSseBridge:
                                     "properties": {
                                         "start_date": {
                                             "type": "string",
-                                            "description": "Дата начала в формате ISO 8601 (YYYY-MM-DDTHH:MM:SS)"
+                                            "description": "Дата и время начала периода в формате ISO 8601 (например: '2024-01-01T00:00:00' или '2024-01-01T10:30:00')"
                                         },
                                         "end_date": {
                                             "type": "string", 
-                                            "description": "Дата окончания в формате ISO 8601 (YYYY-MM-DDTHH:MM:SS)"
+                                            "description": "Дата и время окончания периода в формате ISO 8601 (например: '2024-01-31T23:59:59')"
                                         },
                                         "levels": {
                                             "type": "array",
                                             "items": {"type": "string", "enum": ["Information", "Warning", "Error", "Note"]},
-                                            "description": "Список уровней важности для фильтрации"
+                                            "description": "Список уровней важности для фильтрации событий. Доступные уровни: 'Information' (информация), 'Warning' (предупреждение), 'Error' (ошибка), 'Note' (примечание)"
                                         },
                                         "events": {
                                             "type": "array",
                                             "items": {"type": "string"},
-                                            "description": "Список типов событий для фильтрации"
+                                            "description": "Список типов событий для фильтрации (например: ['_$Session$_.Start', '_$Session$_.Finish', '_$Data$_.Update', '_$Data$_.Delete'])"
                                         },
                                         "limit": {
                                             "type": "integer",
@@ -710,7 +710,7 @@ class SuperAssistantSseBridge:
                                         },
                                         "object_description": {
                                             "type": "object",
-                                            "description": "Описание объекта из результатов execute_query"
+                                            "description": "Описание объекта из результатов execute_query в формате {\"_objectRef\": true, \"УникальныйИдентификатор\": \"uuid\", \"ТипОбъекта\": \"СправочникСсылка.Контрагенты\", \"Представление\": \"Наименование объекта\"}"
                                         },
                                         "link": {
                                             "type": "string",
@@ -723,35 +723,35 @@ class SuperAssistantSseBridge:
                                         "metadata_type": {
                                             "type": "array",
                                             "items": {"type": "string"},
-                                            "description": "Список типов объектов метаданных для фильтрации"
+                                            "description": "Список типов объектов метаданных для фильтрации (например: ['Справочник.Контрагенты', 'Документ.РеализацияТоваровУслуг'])"
                                         },
                                         "user": {
                                             "type": "array",
                                             "items": {"type": "string"},
-                                            "description": "Список пользователей для фильтрации"
+                                            "description": "Список имен пользователей для фильтрации событий (например: ['Администратор', 'Пользователь1'])"
                                         },
                                         "session": {
                                             "type": "array",
                                             "items": {"type": "integer"},
-                                            "description": "Список номеров сеансов для фильтрации"
+                                            "description": "Список номеров сеансов для фильтрации (например: [1, 2, 15])"
                                         },
                                         "application": {
                                             "type": "array",
                                             "items": {"type": "string"},
-                                            "description": "Список приложений для фильтрации"
+                                            "description": "Список приложений для фильтрации (например: ['1CV8', '1CV8C', 'Designer'])"
                                         },
                                         "computer": {
                                             "type": "string",
-                                            "description": "Имя компьютера для фильтрации"
+                                            "description": "Имя компьютера для фильтрации событий (например: 'SERVER-01' или 'WORKSTATION-05')"
                                         },
                                         "comment_contains": {
                                             "type": "string",
-                                            "description": "Подстрока для поиска в комментариях"
+                                            "description": "Подстрока для поиска в комментариях событий (поиск без учета регистра)"
                                         },
                                         "transaction_status": {
                                             "type": "string",
                                             "enum": ["Committed", "RolledBack", "Unfinished", "Unknown"],
-                                            "description": "Статус транзакции для фильтрации"
+                                            "description": "Статус транзакции для фильтрации. Значения: 'Committed' (зафиксирована), 'RolledBack' (отменена), 'Unfinished' (незавершенная), 'Unknown' (неизвестно)"
                                         },
                                         "same_second_offset": {
                                             "type": "integer",
@@ -816,7 +816,7 @@ class SuperAssistantSseBridge:
                                     "properties": {
                                         "target_object_description": {
                                             "type": "object",
-                                            "description": "Описание целевого объекта из результатов execute_query (НЕ ссылка!) / Target object description from execute_query results (NOT a link!)",
+                                            "description": "Описание целевого объекта из результатов execute_query (НЕ ссылка!) в формате {\"_objectRef\": true, \"УникальныйИдентификатор\": \"uuid\", \"ТипОбъекта\": \"СправочникСсылка.Контрагенты\", \"Представление\": \"Наименование\"}",
                                             "properties": {
                                                 "_objectRef": {
                                                     "type": "boolean",
@@ -843,7 +843,7 @@ class SuperAssistantSseBridge:
                                                 "type": "string",
                                                 "enum": ["documents", "catalogs", "information_registers", "accumulation_registers", "accounting_registers", "calculation_registers"]
                                             },
-                                            "description": "Области поиска. Используйте 'catalogs' для справочников, 'documents' для документов, и т.д. НЕ используйте имена конкретных объектов! / Search areas. Use 'catalogs' for catalogs, 'documents' for documents, etc. Do NOT use specific object names!"
+                                            "description": "Области поиска ссылок. Доступные значения: 'catalogs' (справочники), 'documents' (документы), 'information_registers' (регистры сведений), 'accumulation_registers' (регистры накопления), 'accounting_registers' (регистры бухгалтерии), 'calculation_registers' (регистры расчета). НЕ используйте имена конкретных объектов!"
                                         },
                                         "meta_filter": {
                                             "type": "object",
@@ -887,21 +887,21 @@ class SuperAssistantSseBridge:
                                     "properties": {
                                         "metadata_object": {
                                             "type": "string",
-                                            "description": "Полное имя объекта метаданных (например, Справочник.Контрагенты, Документ.РеализацияТоваровУслуг)"
+                                            "description": "Полное имя объекта метаданных для проверки прав доступа (например: 'Справочник.Контрагенты', 'Документ.РеализацияТоваровУслуг', 'РегистрСведений.ЦеныНоменклатуры')"
                                         },
                                         "user_name": {
                                             "type": "string",
-                                            "description": "Имя пользователя для расчета эффективных прав (опционально)"
+                                            "description": "Имя пользователя для расчета эффективных прав доступа (например: 'Администратор', 'Пользователь1'). Если не указано, возвращаются права для всех ролей."
                                         },
                                         "rights_filter": {
                                             "type": "array",
                                             "items": {"type": "string"},
-                                            "description": "Список прав для отображения в результате (опционально)"
+                                            "description": "Список конкретных прав для отображения в результате (например: ['Чтение', 'Изменение', 'Добавление', 'Удаление']). Если не указано, возвращаются все права."
                                         },
                                         "roles_filter": {
                                             "type": "array",
                                             "items": {"type": "string"},
-                                            "description": "Список ролей для отображения (опционально)"
+                                            "description": "Список ролей для отображения прав (например: ['ПолныеПрава', 'Пользователь', 'Администратор']). Если не указано, возвращаются права для всех ролей."
                                         }
                                     },
                                     "required": ["metadata_object"]
