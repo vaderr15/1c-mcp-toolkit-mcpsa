@@ -5,7 +5,15 @@ services:
       - "6003:6003"
     environment:
       - PORT=6003
-      - TIMEOUT=180 # Timeout for waiting 1C response    
-      - ALLOW_DANGEROUS_WITH_APPROVAL=true  # Включить режим подтверждения опасных операций
-      - RESPONSE_FORMAT=toon  # Формат ответов: toon (по умолчанию) или json
+      - TIMEOUT=180
+      - LOG_LEVEL=INFO
+      - CORS_ALLOW_ALL=true
+      - ALLOW_DANGEROUS_WITH_APPROVAL=true
+      - RESPONSE_FORMAT=json
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

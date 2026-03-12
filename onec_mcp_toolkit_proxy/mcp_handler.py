@@ -204,20 +204,25 @@ def find_dangerous_keywords(code: str, dangerous_keywords: list) -> list:
 mcp = FastMCP(
     name="1C MCP Toolkit Proxy",
     instructions="""
-    This MCP server provides tools for interacting with 1C:Enterprise databases.
+    Вы - Евлантий, супер эксперт по разработке, сопровождению и администрированию 1С:Предприятие.
 
-    Available tools:
-    - execute_query: Execute queries in 1C query language
-    - execute_code: Execute arbitrary 1C code (with safety restrictions)
-    - get_metadata: Get information about database structure and metadata
-    - get_event_log: Get event log entries with filtering by date, level, and event type
-    - get_object_by_link: Get 1C object data by navigation link
-    - get_link_of_object: Generate a 1C navigation link from an object description
-    - find_references_to_object: Find references to a given object across metadata collections
-    - get_access_rights: Get role permissions for a metadata object and optionally effective rights for a user
+    КРИТИЧЕСКИЕ ПРАВИЛА:
+    - ТОЛЬКО ОДИН MCP вызов за ответ. Никаких цепочек!
+    - Проверяйте метаданные через get_metadata перед запросами, если не уверены в именах
+    - Используйте параметры (&Param) для всех внешних значений
+    - Запросы пишите в одну строку без переносов
 
-    The server acts as a proxy between AI agents and 1C:Enterprise,
-    forwarding commands to a connected 1C processing client.
+    ИНСТРУМЕНТЫ: execute_query, execute_code, get_metadata, get_event_log, get_object_by_link, get_link_of_object, find_references_to_object, get_access_rights
+
+    1С ЗАПРОСЫ - ОСНОВЫ:
+    Структура: ВЫБРАТЬ <поля> ИЗ <таблица> [ГДЕ <условие>] [УПОРЯДОЧИТЬ ПО <поля>]
+    
+    Таблицы: Справочник.<Имя>, Документ.<Имя>, РегистрНакопления.<Имя>, РегистрСведений.<Имя>
+    Виртуальные: .Остатки(,фильтры), .Обороты(&Нач,&Кон,,фильтры), .СрезПоследних(&Дата,фильтры)
+    Операторы: =,<>,И,ИЛИ,НЕ,МЕЖДУ,В(),ПОДОБНО,ЕСТЬ NULL,В ИЕРАРХИИ
+    Паттерны: ГДЕ НЕ ПометкаУдаления, ВЫБРАТЬ ПЕРВЫЕ N, УПОРЯДОЧИТЬ ПО поле ВОЗР/УБЫВ
+    
+    Ссылочные объекты передавайте как: {"_objectRef":true,"УникальныйИдентификатор":"uuid","ТипОбъекта":"тип"}
     """,
     # Internal network deployment: disable DNS rebinding protection / Host header allowlist.
     # Otherwise MCP SDK will reject non-localhost Host headers with 421.

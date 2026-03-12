@@ -37,7 +37,9 @@ from .channel_registry import channel_registry, ChannelRegistry, DEFAULT_CHANNEL
 from .channel_middleware import ChannelMiddleware
 from .query_encoding_middleware import QueryEncodingMiddleware
 from .channel_sse_transport import ChannelAwareSseTransport
+from .cors_middleware import CorsMiddleware
 from .rest_api import execute_query_handler, execute_code_handler, get_metadata_handler, get_event_log_handler, get_object_by_link_handler, get_link_of_object_handler, find_references_to_object_handler, get_access_rights_handler
+from .superassistant_bridge import superassistant_bridge
 
 # Configure logging
 logging.basicConfig(
@@ -48,6 +50,12 @@ logger = logging.getLogger(__name__)
 
 # Get the MCP server instance
 mcp_server = get_mcp_server()
+
+# Initialize the SuperAssistant bridge with the MCP server
+# This enables the bridge to create internal Streamable HTTP sessions
+# and forward messages between SuperAssistant SSE and MCP server
+# Validates: Requirements 2.1, 3.1
+superassistant_bridge.mcp_server = mcp_server
 
 # Create transports
 streamable_app = mcp_server.streamable_http_app()
@@ -78,12 +86,15 @@ def _is_streamable_get(headers: dict) -> bool:
 
 
 async def legacy_sse_asgi(scope, receive, send) -> None:
+    logger.info("SSE: Starting legacy SSE connection")
     async with legacy_sse_transport.connect_sse(scope, receive, send) as streams:
+        logger.info("SSE: Connected, running MCP server")
         await mcp_server._mcp_server.run(
             streams[0],
             streams[1],
             mcp_server._mcp_server.create_initialization_options(),
         )
+        logger.info("SSE: MCP server run completed")
 
 
 class LegacySseMessageApp:
@@ -93,12 +104,72 @@ class LegacySseMessageApp:
         await legacy_sse_transport.handle_post_message(scope, receive, send)
 
 
+class SuperAssistantSseApp:
+    """
+    ASGI app for SuperAssistant SSE connections.
+    
+    Handles GET requests to /sse endpoint from SuperAssistant browser extension.
+    Creates SSE connections and manages session lifecycle.
+    Also handles POST requests as fallback for misconfigured clients.
+    
+    Validates: Requirements 2.1, 2.2, 6.1, 6.2, 6.3
+    """
+
+    async def __call__(self, scope, receive, send) -> None:
+        """
+        Handle ASGI request for SSE connection or POST message.
+        
+        For GET requests: Delegates to SuperAssistantSseBridge.handle_sse_connection()
+        which manages the complete SSE connection lifecycle.
+        
+        For POST requests: Delegates to SuperAssistantSseBridge.handle_post_message()
+        to handle JSON-RPC messages (fallback for misconfigured clients).
+        
+        For OPTIONS requests: Handles CORS preflight.
+        """
+        # All methods are handled by the bridge
+        await superassistant_bridge.handle_sse_connection(scope, receive, send)
+
+
+class SuperAssistantMessageApp:
+    """
+    ASGI app for SuperAssistant POST messages.
+    
+    Handles POST requests to /sse/message endpoint from SuperAssistant.
+    Forwards JSON-RPC messages to internal Streamable HTTP sessions.
+    
+    Validates: Requirements 3.2, 3.3, 7.1-7.6
+    """
+
+    async def __call__(self, scope, receive, send) -> None:
+        """
+        Handle ASGI request for POST message.
+        
+        Delegates to SuperAssistantSseBridge.handle_post_message()
+        which validates session, parses JSON, and forwards to MCP server.
+        """
+        await superassistant_bridge.handle_post_message(scope, receive, send)
+
+
 class McpUnifiedApp:
     """ASGI app that multiplexes Streamable HTTP and legacy SSE on /mcp."""
 
     async def __call__(self, scope, receive, send) -> None:
         method = scope.get("method", "").upper()
         headers = _extract_headers(scope)
+        
+        # Log MCP request details
+        session_id = headers.get(MCP_SESSION_ID_HEADER)
+        protocol_version = headers.get(MCP_PROTOCOL_VERSION_HEADER)
+        
+        if session_id:
+            logger.debug(f"MCP {method} request with session: {session_id[:8]}...")
+        if protocol_version:
+            logger.debug(f"MCP protocol version: {protocol_version}")
+        
+        # Log request body for debugging
+        if settings.log_level.upper() == "DEBUG" and method == "POST":
+            logger.debug(f"MCP {method} to {scope.get('path', 'unknown')}")
 
         # Safe raw-body logging for MCP requests in DEBUG mode.
         # We do not pre-read or replay the body. Instead, we wrap `receive`
@@ -122,16 +193,16 @@ class McpUnifiedApp:
                         raw_bytes = b"".join(body_parts)
                         try:
                             raw_text = raw_bytes.decode("utf-8")
-                            logger.info(
-                                "MCP Raw Request Body (%d bytes): %s",
+                            logger.debug(
+                                "MCP Request Body (%d bytes): %s",
                                 len(raw_bytes),
                                 raw_text,
                             )
                         except UnicodeDecodeError:
-                            logger.info(
-                                "MCP Raw Request Body (%d bytes, non-UTF-8): %r",
+                            logger.debug(
+                                "MCP Request Body (%d bytes, non-UTF-8): %r",
                                 len(raw_bytes),
-                                raw_bytes,
+                                raw_bytes[:200],  # Log first 200 bytes only
                             )
 
                 return message
@@ -141,6 +212,11 @@ class McpUnifiedApp:
         if method == "GET" and _wants_sse(headers):
             if _is_streamable_get(headers):
                 logger.info("Routing to Streamable HTTP GET (new)")
+                session_id = headers.get(MCP_SESSION_ID_HEADER)
+                if session_id:
+                    logger.debug(f"Existing session: {session_id[:8]}...")
+                else:
+                    logger.info("Creating new MCP session")
                 await streamable_app(scope, receive, send)
             else:
                 logger.info("Routing to Legacy SSE GET (old)")
@@ -421,6 +497,14 @@ async def mcp_debug(request: Request) -> JSONResponse:
 routes = [
     Route("/mcp", McpUnifiedApp(), methods=["GET", "POST", "DELETE"]),
     Route("/mcp/message", LegacySseMessageApp(), methods=["POST"]),
+    # SuperAssistant SSE Bridge routes
+    # These routes provide SuperAssistant-compatible SSE endpoint
+    # /sse - SSE connection endpoint (GET) with channel parameter support
+    # /sse/message - Message posting endpoint (POST) with session_id parameter
+    # Both routes support OPTIONS for CORS preflight requests
+    # Validates: Requirements 2.1, 2.2, 3.2, 6.1-6.5
+    Route("/sse", SuperAssistantSseApp(), methods=["GET", "POST", "OPTIONS"]),
+    Route("/sse/message", SuperAssistantMessageApp(), methods=["POST", "OPTIONS"]),
     Route("/1c/poll", poll_command, methods=["GET"]),
     Route("/1c/result", receive_result, methods=["POST"]),
     Route("/health", health_check, methods=["GET"]),
@@ -440,6 +524,7 @@ app = Starlette(
     routes=routes,
     lifespan=lifespan,
     middleware=[
+        Middleware(CorsMiddleware, allow_origins=settings.cors_origins, allow_all_origins=settings.cors_allow_all),
         Middleware(QueryEncodingMiddleware),
         Middleware(ChannelMiddleware),
         Middleware(MCPLoggingMiddleware)

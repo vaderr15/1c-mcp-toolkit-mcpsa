@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-#build/
 develop-eggs/
 dist/
 downloads/
@@ -43,7 +42,7 @@ env/
 htmlcov/
 .tox/
 .nox/
-.hypothesis
+.hypothesis/
 
 # Logs
 *.log
@@ -71,24 +70,37 @@ desktop.ini
 *.swo
 *~
 
+# Development files
+test_*.py
+demo_*.py
+mock_*.py
+verify_*.py
+*_test.py
+*_demo.py
+*_mock.py
+
+# Documentation drafts
+SUPERASSISTANT_*.md
+TESTING_*.md
+*_DRAFT.md
+*_TEMP.md
+
 # 1C specific
 *.epf.bak
 *.erf.bak
 *.dt.bak
 
 # Native components
-# Template.bin files are compiled DLLs, generated at build time
 native_components/**/Ext/Template.bin
 native_components/**/Template.bin
-
-# Native component vendor headers (large, downloaded at build time)
 native_components/MCPHttpTransport/include/httplib.h
 
 # Build artifacts
-#build/
 build_x86/
-dist/
 
 # IDE
 *.sublime-project
 *.sublime-workspace
+
+# Kiro specs (development artifacts)
+.kiro/specs/

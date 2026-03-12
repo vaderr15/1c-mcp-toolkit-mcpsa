@@ -113,18 +113,22 @@ class ChannelAwareSseTransport:
             async with sse_stream_writer, write_stream_reader:
                 # Send endpoint with channel to client
                 await sse_stream_writer.send({"event": "endpoint", "data": client_post_uri})
-                logger.debug(f"Sent endpoint event: {client_post_uri}")
+                logger.info(f"SSE: Sent endpoint event to session {session_id.hex[:8]}...: {client_post_uri}")
                 
                 # Forward messages from write_stream
                 async for session_message in write_stream_reader:
                     # Serialize SessionMessage to JSON (as in SDK)
+                    message_data = session_message.message.model_dump_json(
+                        by_alias=True, 
+                        exclude_none=True
+                    )
+                    logger.info(f"SSE: Sending message to session {session_id.hex[:8]}...: {message_data[:200]}")
+                    # Send message event
                     await sse_stream_writer.send({
                         "event": "message",
-                        "data": session_message.message.model_dump_json(
-                            by_alias=True, 
-                            exclude_none=True
-                        ),
+                        "data": message_data
                     })
+                    logger.debug(f"SSE: Message sent successfully to session {session_id.hex[:8]}...")
         
         async with anyio.create_task_group() as tg:
             async def response_wrapper(scope: Scope, receive: Receive, send: Send):
@@ -157,7 +161,10 @@ class ChannelAwareSseTransport:
         
         # Extract session_id
         session_id_param = request.query_params.get("session_id")
+        logger.info(f"SSE POST: Received message, session_id={session_id_param}, query_params={dict(request.query_params)}")
+        
         if session_id_param is None:
+            logger.warning("SSE POST: Missing session_id in query params")
             response = Response("session_id is required", status_code=400)
             return await response(scope, receive, send)
         

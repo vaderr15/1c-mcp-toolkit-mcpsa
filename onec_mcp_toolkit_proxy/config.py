@@ -7,7 +7,7 @@ Validates: Requirements 5.1, 5.2
 
 import logging
 import os
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +42,9 @@ class Settings:
         self.enable_encoding_auto_detection: bool = os.getenv(
             "ENABLE_ENCODING_AUTO_DETECTION", "true"
         ).lower() in ("true", "1", "yes")
+        # CORS configuration for browser-based MCP clients (Requirement 8.1, 8.2, 8.3)
+        self.cors_origins: Optional[List[str]] = self._parse_cors_origins()
+        self.cors_allow_all: bool = self._parse_cors_allow_all()
 
     def _parse_dangerous_keywords(self) -> List[str]:
         """Parse DANGEROUS_KEYWORDS from environment variable."""
@@ -94,6 +97,31 @@ class Settings:
             "Valid values are 'json' or 'toon'. Using 'json' as fallback."
         )
         return "json"
+    
+    def _parse_cors_origins(self) -> Optional[List[str]]:
+        """Parse CORS_ORIGINS from environment variable.
+        
+        Returns:
+            List of allowed origins or None if not configured.
+            
+        Validates: Requirement 8.1
+        """
+        env_value = os.getenv("CORS_ORIGINS")
+        if not env_value:
+            return None
+        
+        origins = [origin.strip() for origin in env_value.split(",") if origin.strip()]
+        return origins if origins else None
+    
+    def _parse_cors_allow_all(self) -> bool:
+        """Parse CORS_ALLOW_ALL from environment variable.
+        
+        Returns:
+            True if all origins should be allowed (wildcard *).
+            
+        Validates: Requirement 8.2, 8.3
+        """
+        return os.getenv("CORS_ALLOW_ALL", "false").lower() in ("true", "1", "yes")
 
 
 # Global settings instance

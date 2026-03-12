@@ -82,6 +82,7 @@ class ChannelMiddleware:
                     session_id = session_id_bytes.decode()
                     # Register with effective_channel (not query_channel!)
                     channel_registry.register(session_id, effective_channel)
+                    logger.info(f"Registered session {session_id} to channel '{effective_channel}'")
             
             await send(message)
         
