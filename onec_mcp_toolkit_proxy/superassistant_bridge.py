@@ -619,7 +619,7 @@ class SuperAssistantSseBridge:
                                         "include_schema": {
                                             "type": "boolean",
                                             "description": "Включить схему типов колонок в ответ (по умолчанию: false)",
-                                            "default": false
+                                            "default": False
                                         }
                                     },
                                     "required": ["query"]
