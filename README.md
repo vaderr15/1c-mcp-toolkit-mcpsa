@@ -218,10 +218,6 @@ curl http://YOUR_VPS_IP:6003/sse?channel=default
 - `docker-compose.yml` - production конфигурация с healthcheck
 - `requirements.txt` - добавлены зависимости для SSE
 
-### Удаленные файлы:
-- Все тестовые файлы (`test_*.py`)
-- Временные документы разработки (`SUPERASSISTANT_*.md`)
-- Демо скрипты (`demo_*.py`, `mock_*.py`)
 
 ## 📚 Документация
 
