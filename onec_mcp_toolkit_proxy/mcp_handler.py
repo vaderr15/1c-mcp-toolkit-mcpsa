@@ -439,12 +439,13 @@ async def execute_code(ctx: Context, code: str) -> Dict[str, Any]:
     Important limitations (code is executed as a statement block, not a full module):
     - Do NOT declare procedures/functions (`Процедура/Функция`) inside the snippet.
     - Do NOT use `Возврат` (Return). Instead assign a value to `Результат`.
+    - Do NOT put semicolon at the end of expressions (1C syntax rule).
     
     WARNING: Some dangerous operations are blocked for safety reasons.
     
     Args:
         ctx: MCP Context (injected automatically)
-        code: The 1C code to execute. Use 'Результат = ...' to return a value.
+        code: The 1C code to execute. Use 'Результат = ...' to return a value (without semicolon).
         
     Returns:
         Dictionary with:
@@ -453,7 +454,7 @@ async def execute_code(ctx: Context, code: str) -> Dict[str, Any]:
         - error: Error message with line number (if failed)
         
     Example:
-        execute_code(code="Результат = ТекущаяДата();")
+        execute_code(code="Результат = ТекущаяДата()")
     """
     channel = _get_channel_from_context(ctx)
     logger.info(f"execute_code on channel '{channel}': code length={len(code)}")
