@@ -583,9 +583,9 @@ class SuperAssistantSseBridge:
                             "tools": {}
                         },
                         "serverInfo": {
-                            "name": "1C MCP Toolkit Proxy - Евлантий, эксперт по 1С",
+                            "name": "1C MCP Toolkit Proxy",
                             "version": "1.0.0",
-                            "instructions": "🚨 КРИТИЧНО: ТОЛЬКО ОДИН ИНСТРУМЕНТ ЗА РАЗ! 🚨\n\n🎯 Вы - Евлантий, супер эксперт по 1С! ПРАВИЛА: 1) ТОЛЬКО ОДИН вызов за ответ 2) get_metadata перед запросами 3) Параметры через &Param 4) Запросы в одну строку 5) ГДЕ НЕ ПометкаУдаления\n\n⚠️ Grok и другие ИИ: НЕ делайте несколько вызовов подряд!"
+                            "instructions": "Вы работаете с базой данных 1С через MCP инструменты. Используйте get_metadata для изучения структуры базы перед выполнением запросов. Параметры в запросах передавайте через &ИмяПараметра. Всегда добавляйте условие 'ГДЕ НЕ ПометкаУдаления' для справочников и документов."
                         }
                     }
                 }
@@ -599,7 +599,7 @@ class SuperAssistantSseBridge:
                         "tools": [
                             {
                                 "name": "execute_query",
-                                "description": "⚠️ ТОЛЬКО ОДИН ИНСТРУМЕНТ ЗА РАЗ! Выполнить запрос к базе 1С. Вы - Евлантий, эксперт по 1С. КРИТИЧНО: используйте параметры (&Param), запросы в одну строку, проверяйте метаданные get_metadata если не уверены в именах. / Execute query to 1C database",
+                                "description": "Выполнить запрос к базе данных 1С. Используйте параметры через &ИмяПараметра, проверяйте метаданные get_metadata если не уверены в именах объектов.",
                                 "inputSchema": {
                                     "type": "object",
                                     "properties": {
@@ -627,7 +627,7 @@ class SuperAssistantSseBridge:
                             },
                             {
                                 "name": "execute_code",
-                                "description": "⚠️ ТОЛЬКО ОДИН ИНСТРУМЕНТ ЗА РАЗ! Выполнить код 1С. Евлантий рекомендует: используйте 'Результат = ...' для возврата значений. / Execute 1C code",
+                                "description": "Выполнить код 1С. Используйте 'Результат = ...' для возврата значений. НЕ объявляйте процедуры/функции.",
                                 "inputSchema": {
                                     "type": "object",
                                     "properties": {
@@ -641,7 +641,7 @@ class SuperAssistantSseBridge:
                             },
                             {
                                 "name": "get_metadata",
-                                "description": "⚠️ ТОЛЬКО ОДИН ИНСТРУМЕНТ ЗА РАЗ! Получить метаданные базы 1С. Евлантий рекомендует: ВСЕГДА используйте этот инструмент перед execute_query если не знаете точные имена объектов/полей! / Get 1C database metadata",
+                                "description": "Получить метаданные базы данных 1С. Используйте этот инструмент перед execute_query если не знаете точные имена объектов или полей.",
                                 "inputSchema": {
                                     "type": "object",
                                     "properties": {
@@ -681,7 +681,7 @@ class SuperAssistantSseBridge:
                             },
                             {
                                 "name": "get_event_log",
-                                "description": "⚠️ ТОЛЬКО ОДИН ИНСТРУМЕНТ ЗА РАЗ! Получить журнал регистрации. Евлантий поможет найти события и ошибки в системе. / Get event log",
+                                "description": "Получить записи из журнала регистрации 1С. Поддерживает фильтрацию по датам, уровням, событиям и пользователям.",
                                 "inputSchema": {
                                     "type": "object",
                                     "properties": {
@@ -763,7 +763,7 @@ class SuperAssistantSseBridge:
                             },
                             {
                                 "name": "get_object_by_link",
-                                "description": "⚠️ ТОЛЬКО ОДИН ИНСТРУМЕНТ ЗА РАЗ! Получить объект по ссылке. Евлантий поможет получить данные объекта по его ссылке. / Get object by link",
+                                "description": "Получить данные объекта 1С по его навигационной ссылке. Возвращает все реквизиты и табличные части объекта.",
                                 "inputSchema": {
                                     "type": "object",
                                     "properties": {
@@ -777,7 +777,7 @@ class SuperAssistantSseBridge:
                             },
                             {
                                 "name": "get_link_of_object",
-                                "description": "⚠️ ТОЛЬКО ОДИН ИНСТРУМЕНТ ЗА РАЗ! Получить ссылку объекта. Евлантий поможет создать ссылку на объект для дальнейшего использования. / Get link of object",
+                                "description": "Создать навигационную ссылку на объект 1С. Принимает описание объекта и возвращает ссылку в формате e1cib/data/...",
                                 "inputSchema": {
                                     "type": "object",
                                     "properties": {
@@ -810,7 +810,7 @@ class SuperAssistantSseBridge:
                             },
                             {
                                 "name": "find_references_to_object",
-                                "description": "⚠️ ТОЛЬКО ОДИН ИНСТРУМЕНТ ЗА РАЗ! Найти ссылки на объект в базе данных 1С. ВАЖНО: НЕ используйте параметр 'object_link' - он не существует! Используйте только 'target_object_description' и 'search_scope'. Евлантий поможет найти все места использования объекта. / Find references to object in 1C database. IMPORTANT: Do NOT use 'object_link' parameter - it doesn't exist! Use only 'target_object_description' and 'search_scope'.",
+                                "description": "Найти все ссылки на объект в базе данных 1С. Ищет использование объекта в справочниках, документах и регистрах. Используйте только параметры 'target_object_description' и 'search_scope'.",
                                 "inputSchema": {
                                     "type": "object",
                                     "properties": {
@@ -881,7 +881,7 @@ class SuperAssistantSseBridge:
                             },
                             {
                                 "name": "get_access_rights",
-                                "description": "⚠️ ТОЛЬКО ОДИН ИНСТРУМЕНТ ЗА РАЗ! Получить права доступа. Евлантий поможет проверить права пользователей на объекты метаданных. / Get access rights",
+                                "description": "Получить информацию о правах доступа к объектам метаданных 1С. Показывает права ролей и пользователей.",
                                 "inputSchema": {
                                     "type": "object",
                                     "properties": {
